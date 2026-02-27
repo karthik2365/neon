@@ -67,13 +67,15 @@ export class GameServer {
         ws.send(JSON.stringify({ type: "init", id }));
 
         if (!this.gameLoopInterval) {
-            this.gameLoopInterval = setInterval(() => this.gameLoop(), 1000 / 60);
+            this.gameLoopInterval = setInterval(() => {
+                try { this.gameLoop(); } catch (e) { console.error("gameLoop error:", e); }
+            }, 1000 / 60);
         }
 
         ws.addEventListener("message", (event) => {
             let data;
             try { data = JSON.parse(event.data); } catch (e) { return; }
-            this.handleMessage(session, data);
+            try { this.handleMessage(session, data); } catch (e) { console.error("handleMessage error:", e); }
         });
 
         ws.addEventListener("close", () => {
@@ -111,7 +113,7 @@ export class GameServer {
             };
             session.room = code;
             this.rooms[code].players[id] = this.createPlayer(id, 0, data.name);
-            ws.send(JSON.stringify({ type: "roomCreated", code }));
+            this.safeSend(ws, { type: "roomCreated", code });
             this.broadcastPlayerList(code);
         }
 
@@ -134,10 +136,10 @@ export class GameServer {
 
             this.rooms[code].players[id] = newPlayer;
             session.room = code;
-            ws.send(JSON.stringify({ type: "joined", code }));
+            this.safeSend(ws, { type: "joined", code });
 
             if (this.rooms[code].gameStarted) {
-                ws.send(JSON.stringify({ type: "gameStart" }));
+                this.safeSend(ws, { type: "gameStart", hostId: this.rooms[code].hostId });
                 this.rooms[code].needsFullSync = true;
             }
             this.broadcastPlayerList(code);
@@ -147,11 +149,11 @@ export class GameServer {
             const room = this.rooms[session.room];
             if (!room) return;
             if (Object.keys(room.players).length < 2) {
-                ws.send(JSON.stringify({ type: "error", message: "Need at least 2 players!" }));
+                this.safeSend(ws, { type: "error", message: "Need at least 2 players!" });
                 return;
             }
             if (id !== room.hostId) {
-                ws.send(JSON.stringify({ type: "error", message: "Only the host can start" }));
+                this.safeSend(ws, { type: "error", message: "Only the host can start" });
                 return;
             }
             room.gameStarted = true;
@@ -221,7 +223,7 @@ export class GameServer {
         return code;
     }
 
-    // Flat array trail storage (matching server.js)
+    // Trail storage: regular arrays (safe in CF Workers isolates)
     createPlayer(id, index, name) {
         return {
             id,
@@ -230,8 +232,8 @@ export class GameServer {
             y: CANVAS_H / 2,
             angle: 0,
             turning: 0,
-            trailX: new Float64Array(TRAIL_MAX),
-            trailY: new Float64Array(TRAIL_MAX),
+            trailX: new Array(TRAIL_MAX).fill(0),
+            trailY: new Array(TRAIL_MAX).fill(0),
             trailLen: 0,
             trailStart: 0,
             trailSentCount: 0,
@@ -391,6 +393,14 @@ export class GameServer {
         }, 1000);
     }
 
+    safeSend(ws, data) {
+        try {
+            if (ws.readyState === WebSocket.READY_STATE_OPEN || ws.readyState === 1) {
+                ws.send(typeof data === "string" ? data : JSON.stringify(data));
+            }
+        } catch (e) { /* connection closed */ }
+    }
+
     broadcastPlayerList(code) {
         if (!this.rooms[code]) return;
         const names = {};
@@ -407,7 +417,7 @@ export class GameServer {
         const msg = JSON.stringify(data);
         for (const [ws, session] of this.sessions) {
             if (session.room === code) {
-                try { ws.send(msg); } catch (e) { }
+                this.safeSend(ws, msg);
             }
         }
     }

@@ -622,6 +622,7 @@
     <div class="glow-line"></div>
 
     <div id="errorToast" class="error-toast"></div>
+    <div id="connStatus" style="display:none;position:fixed;bottom:20px;right:20px;font-family:'Chakra Petch',sans-serif;font-size:11px;letter-spacing:3px;color:rgba(255,46,99,0.7);z-index:999;">CONNECTING...</div>
 
     <!-- Menu -->
     <div id="menu">
@@ -799,12 +800,28 @@
         function connect() {
             const protocol = location.protocol === "https:" ? "wss:" : "ws:";
             ws = new WebSocket(protocol + "//" + location.host);
-            ws.onopen = () => console.log("Connected");
-            ws.onclose = () => { console.log("Disconnected"); setTimeout(connect, 2000); };
-            ws.onerror = (e) => console.error("WS error:", e);
+            ws.onopen = () => {
+                document.getElementById("connStatus").style.display = "none";
+            };
+            ws.onclose = () => {
+                document.getElementById("connStatus").style.display = "block";
+                setTimeout(connect, 2000);
+            };
+            ws.onerror = () => {
+                document.getElementById("connStatus").style.display = "block";
+            };
             ws.onmessage = handleMessage;
         }
         connect();
+
+        function wsSend(data) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showError("NOT CONNECTED — RETRYING...");
+                return false;
+            }
+            ws.send(JSON.stringify(data));
+            return true;
+        }
 
         // ── ERROR ──
         function showError(msg) {
@@ -1066,7 +1083,10 @@
         hostBtn.onclick = () => {
             const name = nameInput.value.trim();
             if (!name) { showError("ENTER YOUR CALLSIGN"); nameInput.focus(); return; }
-            ws.send(JSON.stringify({ type: "create", name }));
+            if (!wsSend({ type: "create", name })) return;
+            nameInput.style.display = "none";
+            nameBr.style.display = "none";
+            actionButtons.style.display = "none";
         };
 
         joinBtn.onclick = () => {
@@ -1074,11 +1094,11 @@
             if (!name) { showError("ENTER YOUR CALLSIGN"); nameInput.focus(); return; }
             const code = document.getElementById("joinCode").value.trim();
             if (!code) { showError("ENTER ROOM CODE"); return; }
-            ws.send(JSON.stringify({ type: "join", code, name }));
+            wsSend({ type: "join", code, name });
         };
 
         startBtn.onclick = () => {
-            ws.send(JSON.stringify({ type: "start" }));
+            wsSend({ type: "start" });
         };
 
         function resetToMainMenu() {
@@ -1095,13 +1115,13 @@
         document.getElementById("exitLobby").onclick = resetToMainMenu;
 
         document.getElementById("restartBtn").onclick = () => {
-            ws.send(JSON.stringify({ type: "restart" }));
+            wsSend({ type: "restart" });
         };
         document.getElementById("exitMatchBtn").onclick = () => { location.reload(); };
         document.getElementById("exitMatchBtnGuest").onclick = () => { location.reload(); };
 
         document.getElementById("readyBtn").onclick = () => {
-            ws.send(JSON.stringify({ type: "readyUp" }));
+            wsSend({ type: "readyUp" });
             const btn = document.getElementById("readyBtn");
             btn.textContent = "READY ✓";
             btn.disabled = true;

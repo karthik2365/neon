@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRON ARENA</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Audiowide&family=Chakra+Petch:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ── Background Grid ── */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(255, 140, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 140, 0, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 0;
+            animation: gridPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes gridPulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .glow-line {
+            position: fixed;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #ff8c00, transparent);
+            opacity: 0.3;
+            z-index: 0;
+            animation: scanLine 8s linear infinite;
+        }
+
+        .glow-line:nth-child(2) {
+            top: 20%;
+            width: 100%;
+            animation-duration: 6s;
+        }
+
+        .glow-line:nth-child(3) {
+            top: 50%;
+            width: 100%;
+            animation-duration: 10s;
+            animation-delay: 2s;
+        }
+
+        .glow-line:nth-child(4) {
+            top: 80%;
+            width: 100%;
+            animation-duration: 7s;
+            animation-delay: 4s;
+        }
+
+        @keyframes scanLine {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* ── Menu ── */
+        #menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .title {
+            font-family: 'Audiowide', sans-serif;
+            font-size: 72px;
+            font-weight: 900;
+            letter-spacing: 12px;
+            background: linear-gradient(135deg, #ff8c00, #ffffff, #ff8c00);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleGlow 3s ease-in-out infinite;
+            margin-bottom: 8px;
+        }
+
+        @keyframes titleGlow {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+                filter: brightness(1);
+            }
+
+            50% {
+                background-position: 100% 50%;
+                filter: brightness(1.3);
+            }
+        }
+
+        .subtitle {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 14px;
+            letter-spacing: 8px;
+            color: rgba(255, 140, 0, 0.5);
+            margin-bottom: 50px;
+            text-transform: uppercase;
+        }
+
+        /* ── Inputs ── */
+        input {
+            width: 320px;
+            padding: 14px 24px;
+            margin: 8px;
+            font-size: 18px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 400;
+            letter-spacing: 3px;
+            text-align: center;
+            background: rgba(255, 140, 0, 0.05);
+            border: 1px solid rgba(255, 140, 0, 0.25);
+            color: #ff8c00;
+            outline: none;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        input::placeholder {
+            color: rgba(255, 140, 0, 0.3);
+            letter-spacing: 4px;
+        }
+
+        input:focus {
+            border-color: #ff8c00;
+            background: rgba(255, 140, 0, 0.1);
+            box-shadow: 0 0 25px rgba(255, 140, 0, 0.15), inset 0 0 25px rgba(255, 140, 0, 0.05);
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-block;
+            padding: 14px 36px;
+            margin: 10px 8px;
+            font-size: 16px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: 700;
+            letter-spacing: 3px;
+            cursor: pointer;
+            background: transparent;
+            border: 1px solid rgba(255, 140, 0, 0.4);
+            color: #ff8c00;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 140, 0, 0.15), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover {
+            border-color: #ff8c00;
+            box-shadow: 0 0 30px rgba(255, 140, 0, 0.2), inset 0 0 30px rgba(255, 140, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: rgba(255, 140, 0, 0.1);
+            border-color: #ff8c00;
+        }
+
+        /* ── Sections ── */
+        #joinArea {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #lobby {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .room-code {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 28px;
+            letter-spacing: 6px;
+            color: #ff8c00;
+            margin: 10px 0;
+        }
+
+        .room-label {
+            font-size: 13px;
+            letter-spacing: 5px;
+            color: rgba(255, 140, 0, 0.4);
+            text-transform: uppercase;
+        }
+
+        .player-list {
+            margin: 20px 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .player-list li {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 14px;
+            letter-spacing: 2px;
+            padding: 8px 20px;
+            margin: 6px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid;
+            display: inline-block;
+        }
+
+        .waiting-text {
+            font-size: 13px;
+            letter-spacing: 4px;
+            color: rgba(255, 255, 255, 0.3);
+            animation: blink 1.5s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        /* ── Error Toast ── */
+        .error-toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(255, 46, 99, 0.15);
+            border: 1px solid rgba(255, 46, 99, 0.5);
+            color: #ff2e63;
+            padding: 14px 32px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 13px;
+            letter-spacing: 2px;
+            z-index: 100;
+            transition: transform 0.4s ease;
+        }
+
+        .error-toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ── Game Area ── */
+        #gameArea {
+            display: none;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid rgba(255, 140, 0, 0.2);
+            box-shadow: 0 0 60px rgba(255, 140, 0, 0.08);
+        }
+
+        /* ── Scoreboard ── */
+        #scoreBoard {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            text-align: right;
+            z-index: 20;
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        .score-entry {
+            font-size: 14px;
+            letter-spacing: 2px;
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .score-entry.eliminated {
+            opacity: 0.3;
+        }
+
+        .score-name {
+            opacity: 0.7;
+            font-size: 12px;
+        }
+
+        .score-lives {
+            font-family: 'Audiowide', sans-serif;
+            font-weight: 700;
+            font-size: 22px;
+            letter-spacing: 1px;
+            min-width: 48px;
+            text-align: right;
+            text-shadow: 0 0 12px currentColor;
+        }
+
+        .score-value {
+            font-weight: 700;
+            font-size: 18px;
+            min-width: 20px;
+        }
+
+        .score-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .score-you {
+            opacity: 1 !important;
+        }
+
+        /* ── Countdown ── */
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 120px;
+            font-weight: 900;
+            color: #ff8c00;
+            z-index: 30;
+            text-shadow: 0 0 80px rgba(255, 140, 0, 0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        #countdown.visible {
+            opacity: 1;
+            animation: countPop 0.5s ease-out;
+        }
+
+        @keyframes countPop {
+            0% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(0.9);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* ── Winner Overlay ── */
+        #winnerOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            z-index: 40;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        #winnerOverlay.show {
+            display: flex;
+        }
+
+        .winner-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 36px;
+        }
+
+        .winner-text {
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 20px;
+            letter-spacing: 6px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .winner-name {
+            font-family: 'Audiowide', sans-serif;
+            font-size: 56px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff8c00, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 8px;
+            animation: winnerGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes winnerGlow {
+
+            0%,
+            100% {
+                filter: brightness(1);
+            }
+
+            50% {
+                filter: brightness(1.5);
+            }
+        }
+
+        /* ── HUD Corners ── */
+        .hud-corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-color: rgba(255, 140, 0, 0.3);
+            border-style: solid;
+            z-index: 15;
+        }
+
+        .hud-tl {
+            top: 10px;
+            left: 10px;
+            border-width: 2px 0 0 2px;
+        }
+
+        .hud-tr {
+            top: 10px;
+            right: 10px;
+            border-width: 2px 2px 0 0;
+        }
+
+        .hud-bl {
+            bottom: 10px;
+            left: 10px;
+            border-width: 0 0 2px 2px;
+        }
+
+        .hud-br {
+            bottom: 10px;
+            right: 10px;
+            border-width: 0 2px 2px 0;
+        }
+
+        /* ── Round Info ── */
+        #roundInfo {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: rgba(255, 140, 0, 0.4);
+            z-index: 20;
+            text-transform: uppercase;
+        }
+
+        /* ── Controls Help ── */
+        #controlsHelp {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: rgba(255, 140, 0, 0.25);
+            z-index: 20;
+            text-transform: uppercase;
+            text-align: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .divider {
+            width: 80px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 140, 0, 0.3), transparent);
+            margin: 20px auto;
+        }
+
+        /* ── Speed HUD ── */
+        #speedHud {
+            position: absolute;
+            bottom: 20px;
+            left: 30px;
+            font-family: 'Chakra Petch', sans-serif;
+            z-index: 20;
+            display: none;
+        }
+
+        .speed-label {
+            font-size: 9px;
+            letter-spacing: 3px;
+            color: rgba(255, 140, 0, 0.35);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .speed-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #ff8c00;
+            letter-spacing: 2px;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        .speed-value.fast {
+            color: #ffaa00;
+            text-shadow: 0 0 20px rgba(255, 170, 0, 0.5);
+        }
+
+        .speed-value.danger {
+            color: #ff2e63;
+            text-shadow: 0 0 30px rgba(255, 46, 99, 0.6);
+            animation: speedPulse 0.6s ease-in-out infinite;
+        }
+
+        @keyframes speedPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .timer-value {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: rgba(255, 140, 0, 0.3);
+            margin-top: 6px;
+        }
+
+        /* ── Speed Bar ── */
+        .speed-bar-bg {
+            width: 120px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .speed-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff8c00, #ffaa00, #ff2e63);
+            border-radius: 2px;
+            transition: width 0.4s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-grid"></div>
+    <div class="glow-line"></div>
+    <div class="glow-line"></div>
+    <div class="glow-line"></div>
+
+    <div id="errorToast" class="error-toast"></div>
+
+    <!-- Menu -->
+    <div id="menu">
+        <h1 class="title">TRON</h1>
+        <p class="subtitle">Light Cycle Arena</p>
+
+        <input id="playerName" placeholder="ENTER CALLSIGN" maxlength="12" />
+        <br id="nameBr">
+
+        <div id="actionButtons" style="margin-top: 10px;">
+            <button class="btn btn-primary" id="hostBtn">HOST GAME</button>
+            <button class="btn" id="openJoin">JOIN GAME</button>
+        </div>
+
+        <div id="joinArea">
+            <div class="divider"></div>
+            <input id="joinCode" placeholder="ROOM CODE" maxlength="4" />
+            <br>
+            <button class="btn btn-primary" id="joinBtn">ENTER ARENA</button>
+            <button class="btn" id="exitJoin">EXIT</button>
+        </div>
+
+        <div id="lobby">
+            <div class="divider"></div>
+            <p class="room-label">Room Code</p>
+            <h2 class="room-code" id="roomCode"></h2>
+            <ul class="player-list" id="playerList"></ul>
+            <p class="waiting-text" id="waitingText">WAITING FOR PLAYERS...</p>
+            <button class="btn btn-primary" id="startGame">LAUNCH MATCH</button>
+            <button class="btn" id="exitLobby">EXIT</button>
+        </div>
+    </div>
+
+    <!-- Game Area -->
+    <div id="gameArea">
+        <div class="hud-corner hud-tl"></div>
+        <div class="hud-corner hud-tr"></div>
+        <div class="hud-corner hud-bl"></div>
+        <div class="hud-corner hud-br"></div>
+
+        <div id="roundInfo">LAST LIFE WINS · STEER TO SURVIVE</div>
+        <div id="scoreBoard"></div>
+        <div id="countdown"></div>
+        <div id="controlsHelp">← LEFT &nbsp;&nbsp;|&nbsp;&nbsp; RIGHT →&nbsp;&nbsp;&nbsp;or&nbsp;&nbsp;&nbsp; A
+            &nbsp;&nbsp;|&nbsp;&nbsp; D</div>
+
+        <canvas id="game" width="1400" height="900"></canvas>
+
+        <div id="speedHud">
+            <div class="speed-label">SPEED</div>
+            <div class="speed-value" id="speedValue">2.5x</div>
+            <div class="speed-bar-bg">
+                <div class="speed-bar-fill" id="speedBar" style="width: 31%"></div>
+            </div>
+            <div class="timer-value" id="timerValue">00:00</div>
+        </div>
+
+        <div id="winnerOverlay">
+            <p class="winner-text">Match Winner</p>
+            <p class="winner-name" id="winnerName"></p>
+            <div id="hostActions" class="winner-actions" style="display:none;flex-direction:column;align-items:center;gap:12px;">
+                <div style="display:flex;gap:16px;">
+                    <button class="btn btn-primary" id="restartBtn">PLAY AGAIN</button>
+                    <button class="btn" id="exitMatchBtn">EXIT</button>
+                </div>
+                <p id="hostReadyCount" style="font-family:'Chakra Petch',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(255,140,0,0.4);"></p>
+            </div>
+            <div id="guestActions" class="winner-actions" style="display:none;flex-direction:column;align-items:center;gap:12px;">
+                <div style="display:flex;gap:16px;">
+                    <button class="btn btn-primary" id="readyBtn">READY</button>
+                    <button class="btn" id="exitMatchBtnGuest">EXIT</button>
+                </div>
+                <p id="guestReadyStatus" style="font-family:'Chakra Petch',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(255,140,0,0.4);">WAITING FOR HOST...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── ELEMENTS ──
+        const nameInput = document.getElementById("playerName");
+        const nameBr = document.getElementById("nameBr");
+        const actionButtons = document.getElementById("actionButtons");
+        const hostBtn = document.getElementById("hostBtn");
+        const openJoin = document.getElementById("openJoin");
+        const joinArea = document.getElementById("joinArea");
+        const joinBtn = document.getElementById("joinBtn");
+        const lobby = document.getElementById("lobby");
+        const startBtn = document.getElementById("startGame");
+        const roomCodeText = document.getElementById("roomCode");
+        const scoreBoard = document.getElementById("scoreBoard");
+        const canvas = document.getElementById("game");
+        const ctx = canvas.getContext("2d");
+        const menuEl = document.getElementById("menu");
+        const gameArea = document.getElementById("gameArea");
+        const countdownEl = document.getElementById("countdown");
+        const winnerOverlay = document.getElementById("winnerOverlay");
+        const winnerNameEl = document.getElementById("winnerName");
+        const playerListEl = document.getElementById("playerList");
+        const waitingText = document.getElementById("waitingText");
+        const errorToast = document.getElementById("errorToast");
+        const controlsHelp = document.getElementById("controlsHelp");
+        const speedHud = document.getElementById("speedHud");
+        const speedValueEl = document.getElementById("speedValue");
+        const speedBar = document.getElementById("speedBar");
+        const timerValueEl = document.getElementById("timerValue");
+
+        const MAX_LIVES = 6;
+
+        let ws;
+        let myId = null;
+        let myRoomHostId = null;
+        let players = {};
+        let isGameActive = false;
+        let lastCountdown = -1;
+        let currentWinner = null;
+
+        // ── STATIC GRID (rendered once, never redrawn) ──
+        const gridCanvas = document.createElement('canvas');
+        gridCanvas.width = 1400;
+        gridCanvas.height = 900;
+        const gridCtx = gridCanvas.getContext('2d');
+        gridCtx.strokeStyle = "rgba(255, 140, 0, 0.04)";
+        gridCtx.lineWidth = 0.5;
+        gridCtx.beginPath();
+        for (let x = 0; x < 1400; x += 50) { gridCtx.moveTo(x, 0); gridCtx.lineTo(x, 900); }
+        for (let y = 0; y < 900; y += 50) { gridCtx.moveTo(0, y); gridCtx.lineTo(1400, y); }
+        gridCtx.stroke();
+
+        // ── TRAIL CANVAS (offscreen cache for all trails) ──
+        const trailCanvas = document.createElement('canvas');
+        trailCanvas.width = 1400;
+        trailCanvas.height = 900;
+        const trailCtx = trailCanvas.getContext('2d');
+        let trailDirty = false;
+
+        // Client-side trail storage: flat arrays matching server format
+        // clientTrails[id] = { x: Float32Array, y: Float32Array, len: 0, cap: N }
+        const clientTrails = {};
+        const TRAIL_CAP = 700;
+
+        function ensureTrail(id) {
+            if (!clientTrails[id]) {
+                clientTrails[id] = {
+                    x: new Float32Array(TRAIL_CAP),
+                    y: new Float32Array(TRAIL_CAP),
+                    len: 0,
+                };
+            }
+            return clientTrails[id];
+        }
+
+        // ── PRE-RENDERED HEAD GLOW (avoid per-frame shadowBlur) ──
+        const glowCache = {};
+        function getGlowImage(color) {
+            if (glowCache[color]) return glowCache[color];
+            const size = 48;
+            const c = document.createElement('canvas');
+            c.width = size; c.height = size;
+            const g = c.getContext('2d');
+            g.shadowBlur = 20;
+            g.shadowColor = color;
+            g.fillStyle = color;
+            g.beginPath();
+            g.arc(size / 2, size / 2, 5, 0, Math.PI * 2);
+            g.fill();
+            // Second pass for stronger glow
+            g.fill();
+            glowCache[color] = c;
+            return c;
+        }
+
+        const keysDown = new Set();
+
+        // ── CONNECT ──
+        function connect() {
+            const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+            ws = new WebSocket(protocol + "//" + location.host);
+            ws.onopen = () => console.log("Connected");
+            ws.onclose = () => { console.log("Disconnected"); setTimeout(connect, 2000); };
+            ws.onerror = (e) => console.error("WS error:", e);
+            ws.onmessage = handleMessage;
+        }
+        connect();
+
+        // ── ERROR ──
+        function showError(msg) {
+            errorToast.textContent = msg;
+            errorToast.classList.add("show");
+            setTimeout(() => errorToast.classList.remove("show"), 3000);
+        }
+
+        // ── Scoreboard throttle ──
+        let lastScoreHtml = "";
+
+        // ── MESSAGE HANDLER ──
+        function handleMessage(event) {
+            const data = JSON.parse(event.data);
+
+            if (data.type === "init") myId = data.id;
+            if (data.type === "error") showError(data.message);
+
+            if (data.type === "roomCreated") {
+                myRoomHostId = myId;
+                nameInput.style.display = "none";
+                nameBr.style.display = "none";
+                actionButtons.style.display = "none";
+                lobby.style.display = "block";
+                roomCodeText.textContent = data.code;
+            }
+
+            if (data.type === "joined") {
+                nameInput.style.display = "none";
+                nameBr.style.display = "none";
+                actionButtons.style.display = "none";
+                joinArea.style.display = "none";
+                lobby.style.display = "block";
+                roomCodeText.textContent = data.code;
+                startBtn.style.display = "none";
+                waitingText.textContent = "WAITING FOR HOST TO START...";
+            }
+
+            if (data.type === "playerList") updatePlayerList(data.players);
+
+            if (data.type === "readyCount") {
+                document.getElementById("hostReadyCount").textContent = data.ready + "/" + data.total + " READY";
+            }
+
+            if (data.type === "matchRestart") {
+                winnerOverlay.classList.remove("show");
+                currentWinner = null;
+                isGameActive = true;
+            }
+
+            if (data.type === "gameStart") {
+                if (data.hostId) myRoomHostId = data.hostId;
+                menuEl.style.display = "none";
+                gameArea.style.display = "block";
+                isGameActive = true;
+                speedHud.style.display = "block";
+                setTimeout(() => { controlsHelp.style.opacity = "0"; }, 8000);
+            }
+
+            if (data.type === "state") {
+                const dp = data.p; // compact players
+
+                if (data.f) {
+                    // Full sync: reset all trails
+                    trailCtx.clearRect(0, 0, 1400, 900);
+                    for (let id in clientTrails) {
+                        clientTrails[id].len = 0;
+                    }
+                    for (let id in dp) {
+                        const trail = ensureTrail(id);
+                        const flat = dp[id].t;
+                        const pts = flat.length / 2;
+                        trail.len = 0;
+                        for (let i = 0; i < pts; i++) {
+                            trail.x[i] = flat[i * 2];
+                            trail.y[i] = flat[i * 2 + 1];
+                        }
+                        trail.len = pts;
+                    }
+                    trailDirty = true;
+                } else {
+                    // Delta: append new trail points & draw to offscreen
+                    for (let id in dp) {
+                        const p = dp[id];
+                        const flat = p.t;
+                        const newPts = flat.length / 2;
+
+                        if (newPts > 0) {
+                            const trail = ensureTrail(id);
+
+                            // Draw new segments to offscreen trail canvas
+                            trailCtx.strokeStyle = p.c;
+                            trailCtx.lineWidth = 3;
+                            trailCtx.globalAlpha = p.al ? 0.6 : 0.12;
+                            trailCtx.lineCap = 'round';
+                            trailCtx.lineJoin = 'round';
+                            trailCtx.beginPath();
+                            if (trail.len > 0) {
+                                trailCtx.moveTo(trail.x[trail.len - 1], trail.y[trail.len - 1]);
+                            } else {
+                                trailCtx.moveTo(flat[0], flat[1]);
+                            }
+                            for (let i = 0; i < newPts; i++) {
+                                trailCtx.lineTo(flat[i * 2], flat[i * 2 + 1]);
+                            }
+                            trailCtx.stroke();
+
+                            // White core
+                            trailCtx.lineWidth = 1.5;
+                            trailCtx.globalAlpha = p.al ? 0.85 : 0.12;
+                            trailCtx.strokeStyle = '#ffffff';
+                            trailCtx.beginPath();
+                            if (trail.len > 0) {
+                                trailCtx.moveTo(trail.x[trail.len - 1], trail.y[trail.len - 1]);
+                            } else {
+                                trailCtx.moveTo(flat[0], flat[1]);
+                            }
+                            for (let i = 0; i < newPts; i++) {
+                                trailCtx.lineTo(flat[i * 2], flat[i * 2 + 1]);
+                            }
+                            trailCtx.stroke();
+                            trailCtx.globalAlpha = 1;
+
+                            // Append to local trail buffer
+                            for (let i = 0; i < newPts; i++) {
+                                if (trail.len < TRAIL_CAP) {
+                                    trail.x[trail.len] = flat[i * 2];
+                                    trail.y[trail.len] = flat[i * 2 + 1];
+                                    trail.len++;
+                                }
+                            }
+                        }
+
+                        // Trim if server trail is shorter (circular buffer wrapped)
+                        const serverLen = dp[id].tl || 0;
+                        const trail = ensureTrail(id);
+                        if (trail.len > serverLen + 30) {
+                            const excess = trail.len - serverLen;
+                            // Shift typed array contents
+                            trail.x.copyWithin(0, excess);
+                            trail.y.copyWithin(0, excess);
+                            trail.len -= excess;
+                            // Don't trigger full rebuild - just clear the offscreen canvas and redraw
+                            // This is handled by the delta update in next frame
+                        }
+                    }
+
+                    // Remove trails for disconnected players
+                    for (let id in clientTrails) {
+                        if (!dp[id]) {
+                            delete clientTrails[id];
+                            trailDirty = true;
+                        }
+                    }
+                }
+
+                // Unpack compact player format to our rendering format
+                players = {};
+                for (let id in dp) {
+                    players[id] = {
+                        x: dp[id].x,
+                        y: dp[id].y,
+                        angle: dp[id].a,
+                        alive: dp[id].al,
+                        score: dp[id].s,
+                        lives: dp[id].lv !== undefined ? dp[id].lv : MAX_LIVES,
+                        color: dp[id].c,
+                        name: dp[id].n,
+                    };
+                }
+
+                updateScore();
+
+                // Countdown
+                if (data.cn && data.cd > 0) {
+                    if (data.cd !== lastCountdown) {
+                        lastCountdown = data.cd;
+                        countdownEl.textContent = data.cd;
+                        countdownEl.classList.remove("visible");
+                        void countdownEl.offsetWidth;
+                        countdownEl.classList.add("visible");
+                    }
+                } else if (data.cn && data.cd === 0) {
+                    countdownEl.textContent = "GO!";
+                    countdownEl.classList.add("visible");
+                    setTimeout(() => {
+                        countdownEl.classList.remove("visible");
+                        lastCountdown = -1;
+                    }, 600);
+                } else {
+                    countdownEl.classList.remove("visible");
+                }
+
+                // Winner
+                if (data.w && data.w !== currentWinner) {
+                    currentWinner = data.w;
+                    winnerNameEl.textContent = data.w;
+                    if (!myRoomHostId && data.hid) myRoomHostId = data.hid;
+                    const isHost = myId === myRoomHostId;
+                    document.getElementById("hostActions").style.display = isHost ? "flex" : "none";
+                    document.getElementById("guestActions").style.display = isHost ? "none" : "flex";
+                    document.getElementById("hostReadyCount").textContent = "";
+                    const readyBtn = document.getElementById("readyBtn");
+                    readyBtn.textContent = "READY";
+                    readyBtn.disabled = false;
+                    readyBtn.style.opacity = "";
+                    document.getElementById("guestReadyStatus").textContent = "WAITING FOR HOST...";
+                    winnerOverlay.classList.add("show");
+                    isGameActive = false;
+                }
+
+                // Auto-clear winner once server resets (w becomes null)
+                if (!data.w && currentWinner) {
+                    winnerOverlay.classList.remove("show");
+                    currentWinner = null;
+                    isGameActive = true;
+                }
+
+                // Speed + Timer HUD
+                if (data.sp !== undefined) {
+                    const spd = data.sp;
+                    speedValueEl.textContent = spd.toFixed(1) + 'x';
+                    speedValueEl.className = 'speed-value';
+                    if (spd >= 6) speedValueEl.classList.add('danger');
+                    else if (spd >= 4) speedValueEl.classList.add('fast');
+                    speedBar.style.width = Math.min(((spd - 2.5) / 5.5) * 100, 100) + '%';
+                }
+                if (data.el !== undefined) {
+                    const mins = Math.floor(data.el / 60).toString().padStart(2, '0');
+                    const secs = (data.el % 60).toString().padStart(2, '0');
+                    timerValueEl.textContent = mins + ':' + secs;
+                }
+            }
+        }
+
+        // ── PLAYER LIST ──
+        function updatePlayerList(info) {
+            playerListEl.innerHTML = "";
+            for (let id in info) {
+                const li = document.createElement("li");
+                li.textContent = info[id].name;
+                li.style.borderLeftColor = info[id].color;
+                li.style.color = info[id].color;
+                if (id === myId) li.textContent += " (YOU)";
+                playerListEl.appendChild(li);
+            }
+        }
+
+        // ── UI ACTIONS ──
+        openJoin.onclick = () => {
+            const name = nameInput.value.trim();
+            if (!name) { showError("ENTER YOUR CALLSIGN"); nameInput.focus(); return; }
+            nameInput.style.display = "none";
+            nameBr.style.display = "none";
+            actionButtons.style.display = "none";
+            joinArea.style.display = "block";
+        };
+
+        hostBtn.onclick = () => {
+            const name = nameInput.value.trim();
+            if (!name) { showError("ENTER YOUR CALLSIGN"); nameInput.focus(); return; }
+            ws.send(JSON.stringify({ type: "create", name }));
+        };
+
+        joinBtn.onclick = () => {
+            const name = nameInput.value.trim();
+            if (!name) { showError("ENTER YOUR CALLSIGN"); nameInput.focus(); return; }
+            const code = document.getElementById("joinCode").value.trim();
+            if (!code) { showError("ENTER ROOM CODE"); return; }
+            ws.send(JSON.stringify({ type: "join", code, name }));
+        };
+
+        startBtn.onclick = () => {
+            ws.send(JSON.stringify({ type: "start" }));
+        };
+
+        function resetToMainMenu() {
+            nameInput.style.display = "";
+            nameBr.style.display = "";
+            actionButtons.style.display = "";
+            joinArea.style.display = "none";
+            lobby.style.display = "none";
+            nameInput.value = "";
+            document.getElementById("joinCode").value = "";
+        }
+
+        document.getElementById("exitJoin").onclick = resetToMainMenu;
+        document.getElementById("exitLobby").onclick = resetToMainMenu;
+
+        document.getElementById("restartBtn").onclick = () => {
+            ws.send(JSON.stringify({ type: "restart" }));
+        };
+        document.getElementById("exitMatchBtn").onclick = () => { location.reload(); };
+        document.getElementById("exitMatchBtnGuest").onclick = () => { location.reload(); };
+
+        document.getElementById("readyBtn").onclick = () => {
+            ws.send(JSON.stringify({ type: "readyUp" }));
+            const btn = document.getElementById("readyBtn");
+            btn.textContent = "READY ✓";
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+        };
+
+        // ── CONTROLS ──
+        function updateTurnDirection() {
+            if (!isGameActive) return;
+            const left = keysDown.has("ArrowLeft") || keysDown.has("a") || keysDown.has("A");
+            const right = keysDown.has("ArrowRight") || keysDown.has("d") || keysDown.has("D");
+            let dir = 0;
+            if (left && !right) dir = -1;
+            if (right && !left) dir = 1;
+            ws.send(JSON.stringify({ type: "turn", dir }));
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (!isGameActive) return;
+            if (["ArrowLeft", "ArrowRight", "a", "A", "d", "D"].includes(e.key)) {
+                e.preventDefault();
+                if (!keysDown.has(e.key)) {
+                    keysDown.add(e.key);
+                    updateTurnDirection();
+                }
+            }
+        });
+
+        document.addEventListener("keyup", (e) => {
+            if (!isGameActive) return;
+            if (keysDown.has(e.key)) {
+                keysDown.delete(e.key);
+                updateTurnDirection();
+            }
+        });
+
+        // ── SCOREBOARD (throttled DOM updates) ──
+        function updateScore() {
+            let html = "";
+            for (let id in players) {
+                const p = players[id];
+                const isMe = id === myId;
+                const lives = p.lives !== undefined ? p.lives : MAX_LIVES;
+                const eliminated = lives <= 0;
+                html += `<div class="score-entry ${isMe ? "score-you" : ""} ${eliminated ? "eliminated" : ""}">
+                    <span class="score-name" style="color:${p.color}">${isMe ? "YOU" : p.name}</span>
+                    <span class="score-lives" style="color:${p.color}">${lives}/${MAX_LIVES}</span>
+                </div>`;
+            }
+            // Only update DOM if content changed
+            if (html !== lastScoreHtml) {
+                lastScoreHtml = html;
+                scoreBoard.innerHTML = html;
+            }
+        }
+
+        // ── REBUILD TRAIL CANVAS (only on full sync) ──
+        function rebuildTrailCanvas() {
+            trailCtx.clearRect(0, 0, 1400, 900);
+            for (let id in clientTrails) {
+                const trail = clientTrails[id];
+                const p = players[id];
+                if (!p || trail.len < 2) continue;
+
+                // Draw outer glow
+                trailCtx.strokeStyle = p.color;
+                trailCtx.lineWidth = 3;
+                trailCtx.globalAlpha = p.al ? 0.6 : 0.12;
+                trailCtx.lineCap = 'round';
+                trailCtx.lineJoin = 'round';
+                trailCtx.beginPath();
+                trailCtx.moveTo(trail.x[0], trail.y[0]);
+                for (let i = 1; i < trail.len; i++) {
+                    trailCtx.lineTo(trail.x[i], trail.y[i]);
+                }
+                trailCtx.stroke();
+
+                // Draw white core
+                trailCtx.lineWidth = 1.5;
+                trailCtx.globalAlpha = p.al ? 0.85 : 0.12;
+                trailCtx.strokeStyle = '#ffffff';
+                trailCtx.beginPath();
+                trailCtx.moveTo(trail.x[0], trail.y[0]);
+                for (let i = 1; i < trail.len; i++) {
+                    trailCtx.lineTo(trail.x[i], trail.y[i]);
+                }
+                trailCtx.stroke();
+            }
+            trailCtx.globalAlpha = 1;
+            trailDirty = false;
+        }
+
+        // ── MAIN DRAW LOOP ──
+        function draw() {
+            // Clear
+            ctx.fillStyle = "#0a0a0f";
+            ctx.fillRect(0, 0, 1400, 900);
+
+            // Static grid (pre-rendered, just stamp it)
+            ctx.drawImage(gridCanvas, 0, 0);
+
+            // Rebuild trail cache if needed (trim events)
+            if (trailDirty) rebuildTrailCanvas();
+
+            // Stamp cached trails
+            ctx.drawImage(trailCanvas, 0, 0);
+
+            // Draw player heads (NO shadowBlur — use pre-rendered glow image)
+            for (let id in players) {
+                const p = players[id];
+
+                if (p.alive) {
+                    const angle = p.angle || 0;
+                    const hx = p.x;
+                    const hy = p.y;
+                    const size = 7;
+
+                    // Glow image (pre-rendered, no shadowBlur per frame)
+                    const glow = getGlowImage(p.color);
+                    ctx.drawImage(glow, hx - 24, hy - 24);
+
+                    // Triangle head
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.moveTo(hx + Math.cos(angle) * size, hy + Math.sin(angle) * size);
+                    ctx.lineTo(hx + Math.cos(angle + 2.4) * size * 0.6, hy + Math.sin(angle + 2.4) * size * 0.6);
+                    ctx.lineTo(hx + Math.cos(angle - 2.4) * size * 0.6, hy + Math.sin(angle - 2.4) * size * 0.6);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Center dot
+                    ctx.fillStyle = "#fff";
+                    ctx.beginPath();
+                    ctx.arc(hx, hy, 2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Name label
+                    ctx.fillStyle = p.color;
+                    ctx.font = "bold 11px 'Chakra Petch', sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.fillText(id === myId ? "YOU" : p.name, hx, hy - 16);
+                } else {
+                    // Death X marker
+                    ctx.globalAlpha = 0.4;
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x - 5, p.y - 5);
+                    ctx.lineTo(p.x + 5, p.y + 5);
+                    ctx.moveTo(p.x + 5, p.y - 5);
+                    ctx.lineTo(p.x - 5, p.y + 5);
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            // Border
+            ctx.strokeStyle = "rgba(255, 140, 0, 0.15)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(0, 0, 1400, 900);
+
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+
+</html>

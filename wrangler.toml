@@ -1,0 +1,14 @@
+name = "neon"
+main = "src/worker.js"
+compatibility_date = "2024-01-01"
+
+[[durable_objects.bindings]]
+name = "GAME_SERVER"
+class_name = "GameServer"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["GameServer"]
+
+[site]
+bucket = "./public"

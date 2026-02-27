@@ -799,7 +799,7 @@
         // ── CONNECT ──
         function connect() {
             const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-            ws = new WebSocket(protocol + "//" + location.host);
+            ws = new WebSocket(protocol + "//" + location.host + "/ws");
             ws.onopen = () => {
                 document.getElementById("connStatus").style.display = "none";
             };

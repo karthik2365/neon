@@ -1,8 +1,9 @@
 // ── Cloudflare Worker Entry Point ──
 export default {
     async fetch(request, env) {
+        const url = new URL(request.url);
         const upgradeHeader = request.headers.get("Upgrade");
-        if (upgradeHeader && upgradeHeader.toLowerCase() === "websocket") {
+        if (url.pathname === "/ws" && upgradeHeader && upgradeHeader.toLowerCase() === "websocket") {
             const id = env.GAME_SERVER.idFromName("main");
             const obj = env.GAME_SERVER.get(id);
             return obj.fetch(request);
@@ -52,10 +53,16 @@ export class GameServer {
     }
 
     async fetch(request) {
-        const pair = new WebSocketPair();
-        const [client, server] = Object.values(pair);
-        this.handleSession(server);
-        return new Response(null, { status: 101, webSocket: client });
+        try {
+            const pair = new WebSocketPair();
+            const [client, server] = Object.values(pair);
+            const response = new Response(null, { status: 101, webSocket: client });
+            // Set up session AFTER constructing the response
+            this.handleSession(server);
+            return response;
+        } catch (e) {
+            return new Response("WebSocket setup error: " + e.message, { status: 500 });
+        }
     }
 
     handleSession(ws) {
@@ -64,12 +71,17 @@ export class GameServer {
         const session = { id, ws, room: null };
         this.sessions.set(ws, session);
 
-        ws.send(JSON.stringify({ type: "init", id }));
+        this.safeSend(ws, { type: "init", id });
 
         if (!this.gameLoopInterval) {
-            this.gameLoopInterval = setInterval(() => {
-                try { this.gameLoop(); } catch (e) { console.error("gameLoop error:", e); }
-            }, 1000 / 60);
+            // Defer game loop start to avoid blocking the WebSocket response
+            setTimeout(() => {
+                if (!this.gameLoopInterval) {
+                    this.gameLoopInterval = setInterval(() => {
+                        try { this.gameLoop(); } catch (e) { console.error("gameLoop error:", e); }
+                    }, 1000 / 20); // 20fps server tick
+                }
+            }, 0);
         }
 
         ws.addEventListener("message", (event) => {
@@ -120,12 +132,12 @@ export class GameServer {
         if (data.type === "join") {
             const code = data.code;
             if (!this.rooms[code]) {
-                ws.send(JSON.stringify({ type: "error", message: "Room not found" }));
+                this.safeSend(ws, { type: "error", message: "Room not found" });
                 return;
             }
             const playerCount = Object.keys(this.rooms[code].players).length;
             if (playerCount >= 8) {
-                ws.send(JSON.stringify({ type: "error", message: "Room is full (max 8)" }));
+                this.safeSend(ws, { type: "error", message: "Room is full (max 8)" });
                 return;
             }
 
@@ -395,9 +407,7 @@ export class GameServer {
 
     safeSend(ws, data) {
         try {
-            if (ws.readyState === WebSocket.READY_STATE_OPEN || ws.readyState === 1) {
-                ws.send(typeof data === "string" ? data : JSON.stringify(data));
-            }
+            ws.send(typeof data === "string" ? data : JSON.stringify(data));
         } catch (e) { /* connection closed */ }
     }
 

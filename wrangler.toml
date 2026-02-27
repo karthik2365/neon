@@ -10,5 +10,6 @@ class_name = "GameServer"
 tag = "v1"
 new_classes = ["GameServer"]
 
-[site]
-bucket = "./public"
+[assets]
+directory = "./public"
+binding = "ASSETS"

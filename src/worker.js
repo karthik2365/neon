@@ -23,6 +23,7 @@ const TRAIL_MAX = 600;
 const COLLISION_RADIUS = 4;
 const COLLISION_RADIUS_SQ = COLLISION_RADIUS * COLLISION_RADIUS;
 const COLLISION_SKIP_OWN = 20;
+const LIVES = 6;
 
 const BROADCAST_EVERY = 2; // ~30fps broadcast
 
@@ -106,6 +107,7 @@ export class GameServer {
                 roundStartTime: null,
                 currentSpeed: BASE_SPEED,
                 needsFullSync: false,
+                readyPlayers: new Set(),
             };
             session.room = code;
             this.rooms[code].players[id] = this.createPlayer(id, 0, data.name);
@@ -153,11 +155,39 @@ export class GameServer {
                 return;
             }
             room.gameStarted = true;
-            this.broadcastToRoom(session.room, { type: "gameStart" });
+            this.broadcastToRoom(session.room, { type: "gameStart", hostId: room.hostId });
             this.startCountdown(room, () => {
                 this.startRound(room);
                 room.centerPhase = false;
             });
+        }
+
+        if (data.type === "restart") {
+            const room = this.rooms[session.room];
+            if (!room || id !== room.hostId) return;
+            room.readyPlayers = new Set();
+            room.matchWinner = null;
+            for (let pid in room.players) {
+                room.players[pid].lives = LIVES;
+                room.players[pid].trailLen = 0;
+                room.players[pid].trailStart = 0;
+                room.players[pid].trailSentCount = 0;
+                room.players[pid].alive = true;
+                room.players[pid].turning = 0;
+            }
+            this.broadcastToRoom(session.room, { type: "matchRestart" });
+            this.startCountdown(room, () => {
+                this.startRound(room);
+                room.centerPhase = false;
+            });
+        }
+
+        if (data.type === "readyUp") {
+            const room = this.rooms[session.room];
+            if (!room || !room.matchWinner) return;
+            room.readyPlayers.add(id);
+            const totalNonHost = Object.keys(room.players).filter(pid => pid !== room.hostId).length;
+            this.broadcastToRoom(session.room, { type: "readyCount", ready: room.readyPlayers.size, total: totalNonHost });
         }
 
         if (data.type === "turn") {
@@ -207,6 +237,7 @@ export class GameServer {
             trailSentCount: 0,
             alive: true,
             score: 0,
+            lives: LIVES,
             color: COLORS[index % COLORS.length],
             spawnIndex: index,
         };
@@ -330,6 +361,7 @@ export class GameServer {
         let i = 0;
         for (let id in room.players) {
             const p = room.players[id];
+            if (p.lives <= 0) continue;
             const spawn = spawnConfigs[i % spawnConfigs.length];
             p.x = spawn.x;
             p.y = spawn.y;
@@ -415,33 +447,23 @@ export class GameServer {
             if (room.roundActive && totalPlayers >= 2 && aliveCount <= 1) {
                 room.roundActive = false;
 
-                if (aliveCount === 1) {
-                    lastAlive.score++;
-                    if (lastAlive.score >= 3) {
-                        room.matchWinner = lastAlive.name;
-                        setTimeout(() => {
-                            for (let id in players) {
-                                players[id].score = 0;
-                                players[id].trailLen = 0;
-                                players[id].trailStart = 0;
-                                players[id].trailSentCount = 0;
-                                players[id].alive = true;
-                                players[id].turning = 0;
-                            }
-                            room.matchWinner = null;
-                            this.startCountdown(room, () => {
-                                this.startRound(room);
-                                room.centerPhase = false;
-                            });
-                        }, 4000);
-                    } else {
-                        setTimeout(() => {
-                            this.startCountdown(room, () => {
-                                this.startRound(room);
-                                room.centerPhase = false;
-                            });
-                        }, 2000);
+                // Decrement lives of players who died this round
+                for (let id in players) {
+                    if (!players[id].alive) {
+                        players[id].lives = Math.max(0, players[id].lives - 1);
                     }
+                }
+
+                // Count players still in (lives > 0)
+                let stillIn = [];
+                for (let id in players) {
+                    if (players[id].lives > 0) stillIn.push(players[id]);
+                }
+
+                if (stillIn.length <= 1) {
+                    // Match over — wait for host to restart
+                    room.matchWinner = stillIn.length === 1 ? stillIn[0].name : "DRAW";
+                    room.readyPlayers = new Set();
                 } else {
                     setTimeout(() => {
                         this.startCountdown(room, () => {
@@ -478,6 +500,7 @@ export class GameServer {
                     tl: p.trailLen,
                     al: p.alive,
                     s: p.score,
+                    lv: p.lives,
                     c: p.color,
                     n: p.name,
                 };
@@ -491,6 +514,7 @@ export class GameServer {
                 type: "state",
                 p: compactPlayers,
                 w: room.matchWinner,
+                hid: room.hostId,
                 cn: room.centerPhase,
                 cd: room.countdown || 0,
                 sp: room.currentSpeed || BASE_SPEED,

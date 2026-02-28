@@ -15,18 +15,18 @@ export default {
 // ── Game Constants ──
 const CANVAS_W = 1400;
 const CANVAS_H = 900;
-const BASE_SPEED = 2.5;
-const SPEED_INCREMENT = 0.5;
-const SPEED_INTERVAL = 10;
-const MAX_SPEED = 8;
-const TURN_SPEED = 0.045;
+const BASE_SPEED = 4.5;
+const SPEED_INCREMENT = 0.8;
+const SPEED_INTERVAL = 8;
+const MAX_SPEED = 12;
+const TURN_SPEED = 0.12;
 const TRAIL_MAX = 600;
 const COLLISION_RADIUS = 4;
 const COLLISION_RADIUS_SQ = COLLISION_RADIUS * COLLISION_RADIUS;
 const COLLISION_SKIP_OWN = 20;
 const LIVES = 6;
 
-const BROADCAST_EVERY = 2; // ~30fps broadcast
+const BROADCAST_EVERY = 1; // every tick broadcast
 
 const COLORS = ["#ff8c00", "#00bfff", "#ff2e63", "#39ff14", "#e040fb", "#ffeb3b", "#00e5ff", "#ff6e40"];
 
@@ -79,14 +79,24 @@ export class GameServer {
                 if (!this.gameLoopInterval) {
                     this.gameLoopInterval = setInterval(() => {
                         try { this.gameLoop(); } catch (e) { console.error("gameLoop error:", e); }
-                    }, 1000 / 20); // 20fps server tick
+                    }, 1000 / 30); // 30fps server tick
                 }
             }, 0);
         }
 
         ws.addEventListener("message", (event) => {
             let data;
-            try { data = JSON.parse(event.data); } catch (e) { return; }
+            try {
+                // Handle both string and binary messages
+                if (typeof event.data === 'string') {
+                    data = JSON.parse(event.data);
+                } else if (event.data instanceof ArrayBuffer) {
+                    const text = new TextDecoder().decode(event.data);
+                    data = JSON.parse(text);
+                } else {
+                    return;
+                }
+            } catch (e) { return; }
             try { this.handleMessage(session, data); } catch (e) { console.error("handleMessage error:", e); }
         });
 

@@ -4,7 +4,7 @@ const WebSocket = require("ws");
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ server, path: "/ws" });
 
 app.use(express.static("public"));
 
@@ -14,19 +14,19 @@ let rooms = {};
 
 const CANVAS_W = 1400;
 const CANVAS_H = 900;
-const BASE_SPEED = 2.5;
-const SPEED_INCREMENT = 0.5;
-const SPEED_INTERVAL = 10;
-const MAX_SPEED = 8;
-const TURN_SPEED = 0.045;
+const BASE_SPEED = 4.5;
+const SPEED_INCREMENT = 0.8;
+const SPEED_INTERVAL = 8;
+const MAX_SPEED = 12;
+const TURN_SPEED = 0.12;
 const TRAIL_MAX = 600;
 const COLLISION_RADIUS = 4;
 const COLLISION_RADIUS_SQ = COLLISION_RADIUS * COLLISION_RADIUS;
 const COLLISION_SKIP_OWN = 20;
 const LIVES = 6;
 
-// Broadcast at ~15fps (every 4th physics tick at 60fps)
-const BROADCAST_EVERY = 4;
+// Broadcast at ~30fps (every 1st physics tick at 30fps)
+const BROADCAST_EVERY = 1;
 let tickCounter = 0;
 
 // Spawn positions for up to 8 players
@@ -240,7 +240,9 @@ wss.on("connection", (ws) => {
   ws.on("message", (msg) => {
     let data;
     try {
-      data = JSON.parse(msg);
+      // Handle both string and binary messages
+      const text = typeof msg === 'string' ? msg : msg.toString('utf-8');
+      data = JSON.parse(text);
     } catch (e) {
       return;
     }
@@ -522,7 +524,7 @@ function gameLoop() {
   }
 }
 
-setInterval(gameLoop, 1000 / 60);
+setInterval(gameLoop, 1000 / 30);
 
 server.listen(PORT, () => {
   console.log("Server running http://localhost:" + PORT);

@@ -87,12 +87,17 @@ export class GameServer {
         ws.addEventListener("message", (event) => {
             let data;
             try {
-                // Handle both string and binary messages
+                // Handle string
                 if (typeof event.data === 'string') {
                     data = JSON.parse(event.data);
                 } else if (event.data instanceof ArrayBuffer) {
-                    const text = new TextDecoder().decode(event.data);
-                    data = JSON.parse(text);
+                    const view = new Int8Array(event.data);
+                    if (view.length === 2 && view[0] === 1) {
+                        data = { type: "turn", dir: view[1] };
+                    } else {
+                        const text = new TextDecoder().decode(event.data);
+                        data = JSON.parse(text);
+                    }
                 } else {
                     return;
                 }
@@ -249,6 +254,7 @@ export class GameServer {
     createPlayer(id, index, name) {
         return {
             id,
+            numId: index,
             name: typeof name === "string" && name.trim().length > 0 ? name.trim() : "Player",
             x: CANVAS_W / 2,
             y: CANVAS_H / 2,
@@ -428,6 +434,7 @@ export class GameServer {
             names[id] = {
                 name: this.rooms[code].players[id].name,
                 color: this.rooms[code].players[id].color,
+                numId: this.rooms[code].players[id].numId,
             };
         }
         this.broadcastToRoom(code, { type: "playerList", players: names });
@@ -509,52 +516,82 @@ export class GameServer {
             const sendFull = room.needsFullSync;
             room.needsFullSync = false;
 
-            const compactPlayers = {};
+            const broadcastPlayerIds = Object.keys(players);
+            const playerCount = broadcastPlayerIds.length;
+
+            let totalTrailPoints = 0;
+            const trailsToSend = {};
             for (let id in players) {
                 const p = players[id];
-
                 let trail;
                 if (sendFull) {
                     trail = this.getTrailSlice(p, 0, p.trailLen);
-                    p.trailSentCount = p.trailLen;
                 } else {
                     trail = this.getTrailSlice(p, p.trailSentCount, p.trailLen);
-                    p.trailSentCount = p.trailLen;
                 }
-
-                compactPlayers[id] = {
-                    x: Math.round(p.x * 10) / 10,
-                    y: Math.round(p.y * 10) / 10,
-                    a: Math.round(p.angle * 100) / 100,
-                    t: trail,
-                    tl: p.trailLen,
-                    al: p.alive,
-                    s: p.score,
-                    lv: p.lives,
-                    c: p.color,
-                    n: p.name,
-                };
+                p.trailSentCount = p.trailLen;
+                trailsToSend[id] = trail;
+                totalTrailPoints += trail.length / 2;
             }
+
+            const bufferSize = 11 + (playerCount * 15) + (totalTrailPoints * 4);
+            const buffer = new ArrayBuffer(bufferSize);
+            const view = new DataView(buffer);
+
+            view.setUint8(0, 2);
+            view.setUint8(1, room.centerPhase ? 1 : 0);
+            view.setUint8(2, room.countdown || 0);
+            view.setInt16(3, Math.round((room.currentSpeed || BASE_SPEED) * 100), true);
 
             const roundElapsed = room.roundStartTime
                 ? Math.floor((Date.now() - room.roundStartTime) / 1000)
                 : 0;
+            view.setUint16(5, roundElapsed, true);
+            view.setUint8(7, sendFull ? 1 : 0);
 
-            const state = JSON.stringify({
-                type: "state",
-                p: compactPlayers,
-                w: room.matchWinner,
-                hid: room.hostId,
-                cn: room.centerPhase,
-                cd: room.countdown || 0,
-                sp: room.currentSpeed || BASE_SPEED,
-                el: roundElapsed,
-                f: sendFull || false,
-            });
+            let winnerNumId = 255;
+            if (room.matchWinner === "DRAW") winnerNumId = 254;
+            else if (room.matchWinner) {
+                for (let pid in players) {
+                    if (players[pid].name === room.matchWinner) {
+                        winnerNumId = players[pid].numId;
+                        break;
+                    }
+                }
+            }
+            view.setUint8(8, winnerNumId);
+
+            let hostNumId = 255;
+            if (room.hostId && players[room.hostId]) hostNumId = players[room.hostId].numId;
+            view.setUint8(9, hostNumId);
+
+            view.setUint8(10, playerCount);
+
+            let offset = 11;
+            for (let id in players) {
+                const p = players[id];
+                view.setUint8(offset, p.numId); offset += 1;
+                view.setUint8(offset, p.alive ? 1 : 0); offset += 1;
+                view.setInt16(offset, Math.round(p.x * 10), true); offset += 2;
+                view.setInt16(offset, Math.round(p.y * 10), true); offset += 2;
+                view.setInt16(offset, Math.round(p.angle * 100), true); offset += 2;
+                view.setUint16(offset, p.trailLen, true); offset += 2;
+                view.setUint16(offset, p.score, true); offset += 2;
+                view.setUint8(offset, p.lives); offset += 1;
+
+                const trail = trailsToSend[id];
+                const pts = trail.length / 2;
+                view.setUint16(offset, pts, true); offset += 2;
+
+                for (let i = 0; i < pts; i++) {
+                    view.setInt16(offset, Math.round(trail[i * 2] * 10), true); offset += 2;
+                    view.setInt16(offset, Math.round(trail[i * 2 + 1] * 10), true); offset += 2;
+                }
+            }
 
             for (const [ws, session] of this.sessions) {
                 if (session.room === code) {
-                    try { ws.send(state); } catch (e) { }
+                    try { ws.send(buffer); } catch (e) { }
                 }
             }
         }

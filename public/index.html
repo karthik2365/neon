@@ -8,6 +8,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Audiowide&family=Chakra+Petch:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -100,6 +101,20 @@
             z-index: 10;
         }
 
+        /* ── Ghost Container ── */
+        .ghost-container {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+        }
+
+        .ghost-title {
+            position: relative;
+            z-index: 1;
+        }
+
         .title {
             font-family: 'Audiowide', sans-serif;
             font-size: 72px;
@@ -135,6 +150,79 @@
             color: rgba(255, 140, 0, 0.5);
             margin-bottom: 50px;
             text-transform: uppercase;
+        }
+
+        /* ── Ghost Animation ── */
+        .ghost {
+            --ghost-color: #e0e0e0;
+            width: 2vmin;
+            height: 3vmin;
+            background-color: var(--ghost-color);
+            background-image: radial-gradient(ellipse at 35% 40%, #000 8%, transparent 0%),
+                radial-gradient(ellipse at 65% 40%, #000 8%, transparent 0%),
+                radial-gradient(ellipse at 50% 60%, #000 8%, transparent 0%);
+            border-radius: 100% / 70% 70% 0% 0%;
+            transform: translateX(100em) rotateZ(-90deg);
+            position: absolute;
+            top: 25%;
+            margin-top: -1.5vmin;
+            opacity: 0.85;
+            mix-blend-mode: exclusion;
+            animation: ghostMove 4s ease-out infinite;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        @keyframes ghostMove {
+            0% {
+                transform: translateX(25em) rotateZ(-90deg);
+            }
+
+            100% {
+                transform: translateX(-30em) rotateZ(-90deg);
+            }
+        }
+
+        .ghost div {
+            position: absolute;
+            width: 20%;
+            background-color: var(--ghost-color);
+        }
+
+        .ghost div:nth-of-type(1) {
+            height: 1.7vmin;
+            left: 0;
+            bottom: -1.5vmin;
+            border-radius: 100% / 0% 0% 50% 50%;
+        }
+
+        .ghost div:nth-of-type(2),
+        .ghost div:nth-of-type(4) {
+            height: 1vmin;
+            left: 20%;
+            bottom: -0.8vmin;
+            border-radius: 100% / 50% 50% 0% 0%;
+            background-color: transparent;
+        }
+
+        .ghost div:nth-of-type(3) {
+            height: 1vmin;
+            left: 40%;
+            bottom: -0.95vmin;
+            border-radius: 100% / 0% 0% 60% 60%;
+            background-color: var(--ghost-color);
+        }
+
+        .ghost div:nth-of-type(4) {
+            left: 60%;
+        }
+
+        .ghost div:nth-of-type(5) {
+            height: 0.7vmin;
+            left: 80%;
+            bottom: -0.65vmin;
+            border-radius: 100% / 0% 0% 70% 70%;
+            background-color: var(--ghost-color);
         }
 
         /* ── Inputs ── */
@@ -504,34 +592,7 @@
             border-width: 0 2px 2px 0;
         }
 
-        /* ── Round Info ── */
-        #roundInfo {
-            position: absolute;
-            top: 20px;
-            left: 30px;
-            font-family: 'Chakra Petch', sans-serif;
-            font-size: 11px;
-            letter-spacing: 3px;
-            color: rgba(255, 140, 0, 0.4);
-            z-index: 20;
-            text-transform: uppercase;
-        }
 
-        /* ── Controls Help ── */
-        #controlsHelp {
-            position: absolute;
-            bottom: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-family: 'Chakra Petch', sans-serif;
-            font-size: 10px;
-            letter-spacing: 3px;
-            color: rgba(255, 140, 0, 0.25);
-            z-index: 20;
-            text-transform: uppercase;
-            text-align: center;
-            transition: opacity 0.5s ease;
-        }
 
         .divider {
             width: 80px;
@@ -628,8 +689,19 @@
 
     <!-- Menu -->
     <div id="menu">
-        <h1 class="title">NEON</h1>
-        <p class="subtitle">Light Cycle Arena</p>
+        <div class="ghost-container">
+            <div class="ghost-title">
+                <h1 class="title">NEON</h1>
+                <p class="subtitle">Light Cycle Arena</p>
+            </div>
+            <div class="ghost">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
 
         <input id="playerName" placeholder="ENTER CALLSIGN" maxlength="12" />
         <br id="nameBr">
@@ -665,11 +737,8 @@
         <div class="hud-corner hud-bl"></div>
         <div class="hud-corner hud-br"></div>
 
-        <div id="roundInfo">LAST LIFE WINS · STEER TO SURVIVE</div>
         <div id="scoreBoard"></div>
         <div id="countdown"></div>
-        <div id="controlsHelp">← LEFT &nbsp;&nbsp;|&nbsp;&nbsp; RIGHT →&nbsp;&nbsp;&nbsp;or&nbsp;&nbsp;&nbsp; A
-            &nbsp;&nbsp;|&nbsp;&nbsp; D</div>
 
         <canvas id="game" width="1400" height="900"></canvas>
 
@@ -731,11 +800,10 @@
         const playerListEl = document.getElementById("playerList");
         const waitingText = document.getElementById("waitingText");
         const errorToast = document.getElementById("errorToast");
-        const controlsHelp = document.getElementById("controlsHelp");
-        const speedHud = document.getElementById("speedHud");
+        const timerValueEl = document.getElementById("timerValue");
         const speedValueEl = document.getElementById("speedValue");
         const speedBar = document.getElementById("speedBar");
-        const timerValueEl = document.getElementById("timerValue");
+        const speedHud = document.getElementById("speedHud");
 
         const MAX_LIVES = 6;
 
@@ -749,6 +817,9 @@
         let drawLoopRunning = false;
         let lastStateTime = 0;
         let serverUpdateInterval = 66; // ~15fps, auto-calibrated
+
+        const playerInfoMap = {};
+        let numIdToId = {};
 
         // Interpolation targets for smooth rendering
         const interpTargets = {}; // id -> { tx, ty, ta, x, y, a }
@@ -820,6 +891,7 @@
         function connect() {
             const protocol = location.protocol === "https:" ? "wss:" : "ws:";
             ws = new WebSocket(protocol + "//" + location.host + "/ws");
+            ws.binaryType = "arraybuffer";
             ws.onopen = () => {
                 document.getElementById("connStatus").style.display = "none";
             };
@@ -855,7 +927,61 @@
 
         // ── MESSAGE HANDLER ──
         function handleMessage(event) {
-            const data = JSON.parse(event.data);
+            let data;
+
+            if (event.data instanceof ArrayBuffer) {
+                const view = new DataView(event.data);
+                if (view.getUint8(0) === 2) { // state
+                    const cn = view.getUint8(1) === 1;
+                    const cd = view.getUint8(2);
+                    const sp = view.getInt16(3, true) / 100;
+                    const el = view.getUint16(5, true);
+                    const f = view.getUint8(7) === 1;
+                    const winId = view.getUint8(8);
+                    const hostIdNum = view.getUint8(9);
+                    const pCount = view.getUint8(10);
+
+                    let w = null;
+                    if (winId === 254) w = "DRAW";
+                    else if (winId !== 255 && numIdToId[winId]) {
+                        w = playerInfoMap[numIdToId[winId]] ? playerInfoMap[numIdToId[winId]].name : "WINNER";
+                    }
+
+                    let hid = null;
+                    if (hostIdNum !== 255) hid = numIdToId[hostIdNum];
+
+                    const dp = {};
+                    let offset = 11;
+                    for (let i = 0; i < pCount; i++) {
+                        const numId = view.getUint8(offset); offset++;
+                        const al = view.getUint8(offset) === 1; offset++;
+                        const x = view.getInt16(offset, true) / 10; offset += 2;
+                        const y = view.getInt16(offset, true) / 10; offset += 2;
+                        const a = view.getInt16(offset, true) / 100; offset += 2;
+                        const tl = view.getUint16(offset, true); offset += 2;
+                        const s = view.getUint16(offset, true); offset += 2;
+                        const lv = view.getUint8(offset); offset++;
+                        const pts = view.getUint16(offset, true); offset += 2;
+
+                        const t = [];
+                        for (let j = 0; j < pts; j++) {
+                            t.push(view.getInt16(offset, true) / 10); offset += 2;
+                            t.push(view.getInt16(offset, true) / 10); offset += 2;
+                        }
+
+                        const pid = numIdToId[numId];
+                        if (pid) {
+                            const pInfo = playerInfoMap[pid];
+                            dp[pid] = { x, y, a, t, tl, al, s, lv, c: pInfo ? pInfo.color : '#fff', n: pInfo ? pInfo.name : 'Unknown' };
+                        }
+                    }
+                    data = { type: "state", p: dp, w, hid, cn, cd, sp, el, f };
+                } else {
+                    return; // other binary messages ignored
+                }
+            } else {
+                data = JSON.parse(event.data);
+            }
 
             if (data.type === "init") myId = data.id;
             if (data.type === "error") showError(data.message);
@@ -899,7 +1025,6 @@
                 isGameActive = true;
                 speedHud.style.display = "block";
                 startDrawLoop();
-                setTimeout(() => { controlsHelp.style.opacity = "0"; }, 8000);
             }
 
             if (data.type === "state") {
@@ -1109,7 +1234,10 @@
         // ── PLAYER LIST ──
         function updatePlayerList(info) {
             playerListEl.innerHTML = "";
+            numIdToId = {};
             for (let id in info) {
+                playerInfoMap[id] = info[id];
+                numIdToId[info[id].numId] = id;
                 const li = document.createElement("li");
                 li.textContent = info[id].name;
                 li.style.borderLeftColor = info[id].color;
@@ -1185,7 +1313,13 @@
             let dir = 0;
             if (left && !right) dir = -1;
             if (right && !left) dir = 1;
-            ws.send(JSON.stringify({ type: "turn", dir }));
+
+            // Send binary Turn command (Length = 2 bytes)
+            const buf = new ArrayBuffer(2);
+            const view = new Int8Array(buf);
+            view[0] = 1;
+            view[1] = dir;
+            ws.send(buf);
         }
 
         document.addEventListener("keydown", (e) => {
